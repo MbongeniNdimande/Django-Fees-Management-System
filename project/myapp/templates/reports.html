@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <button id="download-pdf-btn" class="btn btn-primary shadow-sm">
+            <i class="fas fa-file-pdf"></i> Download Report PDF
+        </button>
+    </div>
+
+    <div id="report-content" class="p-4 border rounded"> 
+        <div class="row mb-4 text-center">
+            <h1 class="text-center">Financial Report</h1> 
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title">Total Payments</h3>
+                        <h2>${{ total_payments|floatformat:2 }}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title">Total Owing</h3>
+                        <h2>${{ total_owing|floatformat:2 }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h3>Owing Students</h3>
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Amount Owed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for owing in Owing %}
+                        <tr>
+                            <td>{{ owing.student_id }}</td>
+                            <td>${{ owing.amount_owed|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center">No students are currently owing.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+
+{% block extra_js %}
+<script>
+    document.getElementById('download-pdf-btn').addEventListener('click', function () {
+        const content = document.getElementById('report-content');
+
+        html2canvas(content, { 
+            scale: 2, 
+            useCORS: true 
+        }).then(canvas => {
+            const { jsPDF } = window.jspdf;
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4'); 
+            
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            
+            // FILENAME CHANGE: Use a clear, specific name for the downloaded file
+            pdf.save('Financial_Report_' + new Date().toISOString().slice(0, 10) + '.pdf'); 
+        }).catch(err => {
+            console.error("Error generating PDF:", err);
+            alert("Could not generate PDF. Please check the console for details.");
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Make a Payment</h2>
+    
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Payment Form -->
+    <div class="mb-4">
+        <!-- ACTION UPDATED: Now points to the 'make_payment' URL configured in urls.py -->
+        <form method="POST" action="{% url 'make_payment' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="student_id" class="form-label">Student ID</label>
+                <input type="number" id="student_id" name="student_id" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="fee_type" class="form-label">Fee Type</label>
+                <select id="fee_type" name="fee_type" class="form-select" required>
+                    <!-- Ensure these values match the choices in FeeStructure model (Tuition, Exam, Development, Other) -->
+                    <option value="Tuition">Tuition</option>
+                    <option value="Exam">Exam</option>
+                    <option value="Development">Development</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="amount_paid" class="form-label">Amount Paid</label>
+                <!-- Use 'text' type for better decimal handling, though 'number' is often used -->
+                <input type="number" step="0.01" id="amount_paid" name="amount_paid" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="payment_method" class="form-label">Payment Method</label>
+                <select id="payment_method" name="payment_method" class="form-select" required>
+                    <!-- Ensure these values match the choices in Payment model (Cash, EcoCash, Bank Transfer, Swipe) -->
+                    <option value="Cash">Cash</option>
+                    <option value="EcoCash">EcoCash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Swipe">Swipe</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="receipt_number" class="form-label">Receipt Number</label>
+                <input type="text" id="receipt_number" name="receipt_number" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Payment</button>
+            <a href="{% url 'reports' %}" class="btn btn-primary">Reports</a>
+        </form>
+    </div>
+
+    <!-- Payments Table - This section assumes the view passes a list of payments in the context -->
+    <h3>Recent Payments</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Fee Type</th>
+                <th>Amount Paid</th>
+                <th>Payment Date</th>
+                <th>Payment Method</th>
+                <th>Receipt Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in Payment %} <!-- Changed 'Payment' to 'payments' for standard Django context variable naming -->
+            <tr>
+                <!-- Access the student's ID or name through the ForeignKey relationship if available -->
+                <td>{{ payment.student.id }}</td> 
+                <td>{{ payment.fee_type }}</td>
+                <td>{{ payment.amount_paid }}</td>
+                <td>{{ payment.payment_date }}</td>
+                <td>{{ payment.payment_method }}</td>
+                <td>{{ payment.receipt_number }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No payments found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
